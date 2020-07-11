@@ -22,8 +22,8 @@ var AssetSchema = new mongoose.Schema({
     }
 });
 
-const AssetDatabaseModel = (timeframe) => {
-    var AssetModel = mongoose.model(timeframe, AssetSchema);
+const AssetDatabaseModel = (collectionName) => {
+    var AssetModel = mongoose.model(collectionName, AssetSchema);
     return AssetModel;
 }
 

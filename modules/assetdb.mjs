@@ -60,27 +60,54 @@ class AssetDatabaseConnection{
 class AssetDatabaseHandler{
     constructor(){
     }
+
+    async checkStates(stream, model){
+        let state;
+        let states = [];
+        for(const item of stream){
+            const date = new Date(millisecondsToTimestring(item[0]));
+            const ISODate = date.toISOString();
+            state = await model.exists({date: ISODate});
+            states.push(state);
+            // console.log(item, date, state);
+        }
+        return states;
+    }
+
     // @private
-    _getMultiModel(asset, timeframe, stream){
+    async _getMultiModel(asset, timeframe, stream){
         // Collection selector. Selects one of these collections: 5m, 15m, 1h, 4h, 1d
-        const AssetModel = AssetDatabaseModel(timeframe);
-        const doc = stream.map((item)=>{
+        const collectionName = `col${timeframe}`
+        console.log(collectionName);
+        const AssetModel = AssetDatabaseModel(collectionName);
+
+        const states = await this.checkStates(stream, AssetModel);
+        // console.log(states);
+        // const foo = await stream.map((item) => {
+        //     const date = new Date(millisecondsToTimestring(item[0]))
+        //     let state =  AssetModel.exists({date: date})
+        //     console.log(item, date, state);
+        // });
+        const doc = stream.map((item, index)=>{
             const date = new Date(millisecondsToTimestring(item[0]))
-            if(!(AssetModel.exists({date: date}))){
+            // console.log(date, states[index]);
+            if(!(states[index])){
                 return {
-                    asset: 'BTC/EUR',
-                    timeframe: '5m',
+                    asset: asset,
+                    timeframe: timeframe,
                     stream: item,
                     date: date.toISOString()
                 };
             }
         });
+
         // Sanitize doc array and remove any 'undefined' elements for those
         // docs that already exist in the db.
+        // console.log(doc);
         let result = doc.filter((item) => {
             return item != null;
         });
-
+        // console.log(result);
         return [AssetModel, result];
     }
 
@@ -123,9 +150,11 @@ class AssetDatabaseHandler{
     // @public
     async dbInsertMany(asset, timeframe, stream){
         try{
-            const [currentAssetModel, multiStream] = this._getMultiModel(asset, timeframe, stream);
-
-            // Don't run the db stage if zero lenght stream received.
+            // console.log(stream);
+            //this.checkState(stream);
+            const [currentAssetModel, multiStream] = await this._getMultiModel(asset, timeframe, stream);
+            console.log('***', multiStream.length, '***');
+            //Don't run the db stage if zero length stream received.
             if(!multiStream.length==0){
                 // Refactor this into a try..catch..finally block.
                 try{
@@ -141,7 +170,7 @@ class AssetDatabaseHandler{
                 console.log('[WARNNING] No unique documents to add.');
             }
         }catch(err){
-            throw new Error('Application failure has occured!');
+            throw new Error('Application failure has occurred!');
         }
     }
 }

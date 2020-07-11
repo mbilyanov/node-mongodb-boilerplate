@@ -39,26 +39,28 @@ const demoMultiExchangeStream = [
     [1594445100000,8213,8213,8212.9,8213,0.77886317],
     [1594445400000,8213,8213,8209.5,8213,3.81409721],
     [1594445700000,8210,8213,8208.9,8212,1.66349193],
-    [1594446000000,8212,8213,8211.9,8213,0.99750926]
+    [1594446000000,8212,8213,8211.9,8213,0.99750926],
+    [1594446300000,8213,8213,8212.9,8212.9,3.46691656],
+    [1594446600000,8212.9,8213,8212.9,8213,1.33373183]
 ];
 
 async function dbCycle(){
     try{
         let asset = new AssetDatabaseHandler();
 
-        try{
-            await asset.dbSave('BTC/EUR', '5m', demoExchangeStream)
-            console.log('DB_SAVE: Finished.');
-        }catch(error){
-            console.log('DB_SAVE: [ERROR]', error);
-        }
-
         // try{
-        //     await asset.dbInsertMany('BTC/EUR', '5m', demoMultiExchangeStream)
-        //     console.log('DB_INSERT_MANY: Finished.');
+        //     await asset.dbSave('BTC/EUR', '5m', demoExchangeStream)
+        //     console.log('DB_SAVE: Finished.');
         // }catch(error){
-        //     console.log('DB_INSERT_MANY: [ERROR]', error);
+        //     console.log('DB_SAVE: [ERROR]', error);
         // }
+
+        try{
+            await asset.dbInsertMany('BTC/EUR', '5m', demoMultiExchangeStream)
+            console.log('DB_INSERT_MANY: Finished.');
+        }catch(error){
+            console.log('DB_INSERT_MANY: [ERROR]', error);
+        }
     }catch(failure){
         console.log('[SEVERE_FAILURE]', failure)
     }
